@@ -14,6 +14,18 @@ CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
 var builder = WebApplication.CreateBuilder();
 _ = int.TryParse(builder.Configuration["LaunchSettings:WebPort"] ?? "80", out var port);
 builder.WebHost.ConfigureKestrel(o => o.Listen(IPAddress.Any, port));
+
+// Configure CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", builder =>
+    {
+        builder.AllowAnyOrigin()
+               .AllowAnyMethod()
+               .AllowAnyHeader();
+    });
+});
+
 builder.Services.AddSingleton<UserSettings>();
 builder.Services.AddSingleton<CommandQueue>();
 builder.Services.AddSingleton<JkBms>();
@@ -32,8 +44,13 @@ if (app.Environment.IsDevelopment())
 }
 app.UseBlazorFrameworkFiles();
 app.UseStaticFiles();
-app.MapFallbackToFile("index.html");
 app.UseRouting();
 app.UseAuthorization();
+
+// Enable CORS
+app.UseCors("AllowAll");
+
 app.UseFastEndpoints(c => c.Endpoints.RoutePrefix = "api");
+app.MapFallbackToFile("index.html");
+
 app.Run();
